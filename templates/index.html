@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crowd Forecast · Evynx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12253B; --ink-2:#2C4059; --paper:#FBFAF7; --line:#DFDBD2;
+  --muted:#6B7A8A;
+  --quiet:#0E7C7B; --moderate:#7A9A8B; --busy:#E08A1E; --verybusy:#C1452B;
+  --shell:#F3F1EC;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:Inter,system-ui,sans-serif; font-size:15px; line-height:1.55;
+}
+a{color:inherit}
+
+/* ---------- shell ---------- */
+header{
+  border-bottom:1px solid var(--line); padding:22px 34px;
+  display:flex; align-items:baseline; gap:18px; flex-wrap:wrap;
+}
+header h1{
+  font-family:Newsreader,Georgia,serif; font-weight:400;
+  font-size:27px; margin:0; letter-spacing:-.01em;
+}
+header .sub{color:var(--muted); font-size:13px}
+header .spacer{flex:1}
+header .counts{font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums}
+
+main{display:grid; grid-template-columns:326px 1fr; min-height:calc(100vh - 76px)}
+
+/* ---------- controls ---------- */
+aside{
+  border-right:1px solid var(--line); padding:26px 28px 40px;
+  background:var(--shell);
+}
+label{display:block; font-size:12.5px; color:var(--muted); margin:0 0 6px}
+select,input[type=date]{
+  width:100%; padding:9px 10px; font:inherit; font-size:14px;
+  border:1px solid var(--line); border-radius:3px; background:#fff; color:var(--ink);
+}
+select:focus,input:focus{outline:2px solid var(--ink); outline-offset:1px}
+.field{margin-bottom:18px}
+button{
+  width:100%; padding:11px; font:inherit; font-weight:500; font-size:14.5px;
+  background:var(--ink); color:var(--paper); border:0; border-radius:3px;
+  cursor:pointer;
+}
+button:hover{background:var(--ink-2)}
+button:disabled{opacity:.5; cursor:default}
+
+.meta{margin-top:26px; border-top:1px solid var(--line); padding-top:18px}
+.meta dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:7px 16px; font-size:13px}
+.meta dt{color:var(--muted)}
+.meta dd{margin:0; text-align:right}
+.pill{
+  display:inline-block; padding:1px 8px; border-radius:2px; font-size:11.5px;
+  border:1px solid currentColor;
+}
+.pill.yes{color:var(--quiet)} .pill.no{color:var(--muted)}
+
+/* ---------- reading ---------- */
+section.reading{padding:30px 40px 60px; max-width:880px}
+.empty{color:var(--muted); font-family:Newsreader,serif; font-size:19px; margin-top:60px}
+
+h2.pkg{
+  font-family:Newsreader,serif; font-weight:400; font-size:25px;
+  margin:0 0 4px; letter-spacing:-.01em; line-height:1.25;
+}
+.route{color:var(--muted); font-size:13px; margin-bottom:30px}
+
+/* the year strip — the signature element */
+.strip-wrap{margin-bottom:34px}
+.strip-head{
+  display:flex; justify-content:space-between; align-items:baseline;
+  margin-bottom:10px; font-size:12.5px; color:var(--muted);
+}
+.strip{
+  display:grid; grid-template-columns:repeat(12,1fr); gap:5px;
+  align-items:end; height:132px;
+}
+.mon{display:flex; flex-direction:column; justify-content:flex-end; height:100%; position:relative}
+.bar{
+  width:100%; border-radius:2px 2px 0 0; min-height:3px;
+  transition:height .45s cubic-bezier(.2,.7,.3,1);
+}
+.bar.q{background:var(--quiet)} .bar.m{background:var(--moderate)}
+.bar.b{background:var(--busy)}  .bar.v{background:var(--verybusy)}
+.mon.off .bar{
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.55) 0 3px,transparent 3px 6px);
+  opacity:.42;
+}
+.mon .val{
+  font-size:10.5px; color:var(--muted); text-align:center; margin-bottom:3px;
+  font-variant-numeric:tabular-nums;
+}
+.mon .lab{
+  font-size:11px; text-align:center; color:var(--muted); padding-top:7px;
+  border-top:1px solid var(--line);
+}
+.mon.sel .lab{color:var(--ink); font-weight:600}
+.mon.sel .bar{outline:2px solid var(--ink); outline-offset:1px}
+.legend{display:flex; gap:16px; font-size:11.5px; color:var(--muted); margin-top:26px; flex-wrap:wrap}
+.legend i{width:9px; height:9px; display:inline-block; border-radius:1px; margin-right:5px}
+
+/* verdict */
+.verdict{display:flex; align-items:flex-start; gap:26px; margin-bottom:8px}
+.score{
+  font-family:Newsreader,serif; font-size:66px; line-height:.9; font-weight:300;
+  font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+}
+.score small{display:block; font-size:14px; font-family:Inter,sans-serif; margin-top:9px; letter-spacing:.01em}
+.vtext{flex:1; padding-top:5px}
+.vtext p{margin:0 0 7px}
+.why{color:var(--ink-2); font-size:14px}
+.why span{
+  display:inline-block; margin:0 6px 6px 0; padding:2px 9px;
+  background:#fff; border:1px solid var(--line); border-radius:2px; font-size:12.5px;
+}
+.warn{
+  margin:14px 0 0; padding:9px 12px; font-size:13px;
+  border-left:3px solid var(--busy); background:#fff;
+}
+
+hr.rule{border:0; border-top:1px solid var(--line); margin:30px 0 24px}
+
+.action-kind{font-size:12px; color:var(--muted); margin-bottom:5px}
+.action-msg{font-family:Newsreader,serif; font-size:19px; line-height:1.45; margin:0 0 20px}
+
+.alt{
+  border:1px solid var(--line); border-radius:3px; background:#fff;
+  padding:14px 16px; margin-bottom:9px;
+  display:flex; align-items:center; gap:18px;
+}
+.alt .a-main{flex:1; min-width:0}
+.alt .a-title{font-size:14.5px; margin-bottom:2px}
+.alt .a-sub{font-size:12.5px; color:var(--muted)}
+.alt .a-num{text-align:right; white-space:nowrap}
+.alt .a-idx{font-size:21px; font-variant-numeric:tabular-nums; line-height:1.1}
+.alt .a-band{font-size:11.5px; color:var(--muted)}
+.alt .a-delta{font-size:12px; color:var(--quiet); white-space:nowrap}
+
+.loading{color:var(--muted); font-size:14px}
+.err{color:var(--verybusy); font-size:14px}
+
+@media (max-width:820px){
+  main{grid-template-columns:1fr}
+  aside{border-right:0; border-bottom:1px solid var(--line)}
+  section.reading{padding:24px 22px 50px}
+  .verdict{gap:18px}
+  .score{font-size:52px}
+  .mon .val{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Crowd Forecast</h1>
+  <span class="sub">Evynx tour packages</span>
+  <span class="spacer"></span>
+  <span class="counts" id="counts"></span>
+</header>
+
+<main>
+  <aside>
+    <div class="field">
+      <label for="pkg">Package</label>
+      <select id="pkg"><option>loading…</option></select>
+    </div>
+
+    <div class="field">
+      <label for="date">Departure date</label>
+      <input type="date" id="date" value="2026-11-08" min="2026-01-01" max="2027-12-31">
+    </div>
+
+    <button id="go">Forecast</button>
+
+    <div class="meta">
+      <dl>
+        <dt>Region</dt><dd id="m-region">—</dd>
+        <dt>Type</dt><dd id="m-type">—</dd>
+        <dt>Duration</dt><dd id="m-dur">—</dd>
+        <dt>Swappable</dt><dd id="m-swap">—</dd>
+        <dt>Confidence</dt><dd id="m-conf">—</dd>
+      </dl>
+    </div>
+  </aside>
+
+  <section class="reading" id="out">
+    <p class="empty">Choose a package and a date to see how busy it will be.</p>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const BANDCLS = {'Quiet':'q','Moderate':'m','Busy':'b','Very Busy':'v'};
+
+async function j(u){ const r = await fetch(u); return r.json(); }
+
+const BAND = v => v>=75?'Very Busy':v>=55?'Busy':v>=30?'Moderate':'Quiet';
+
+async function boot(){
+  try{
+    const st = await j('/api/stats');
+    $('counts').textContent =
+      `${st.tours} packages · ${st.places_measured} of ${st.places} places measured · ${st.swappable_tours} swappable`;
+  }catch(e){}
+
+  const sel = $('pkg');
+  try{
+    const d = await j('/api/packages?limit=1000');
+    const list = (d.packages||[]).sort((a,b)=>a.title.localeCompare(b.title));
+    sel.innerHTML = list.map(t=>
+      `<option value="${t.package_id}">${t.title.slice(0,70)}</option>`).join('');
+  }catch(e){
+    sel.innerHTML = '<option>could not load packages</option>';
+    return;
+  }
+  run();
+}
+
+/* 12 monthly forecasts -> the year strip. Works without /api/year_curve. */
+async function buildCurve(pid, year){
+  const reqs = [];
+  for(let m=1;m<=12;m++){
+    const d = `${year}-${String(m).padStart(2,'0')}-15`;
+    reqs.push(j(`/api/forecast?package_id=${pid}&date=${d}`).catch(()=>null));
+  }
+  const res = await Promise.all(reqs);
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return { year, curve: res.map((f,i)=>{
+    if(!f || f.error) return {month:i+1,label:MON[i],index:null,band:null,in_season:null};
+    const v = f.recommendation_index;
+    return {month:i+1, label:MON[i], index:v, band:BAND(v),
+            in_season:!(f.out_of_season_stops||[]).length};
+  })};
+}
+
+async function run(){
+  const pid = $('pkg').value, d = $('date').value;
+  if(!pid || !d) return;
+  $('go').disabled = true;
+  $('out').innerHTML = '<p class="loading">Working…</p>';
+
+  try{
+    const [rec, meta, curve] = await Promise.all([
+      j(`/api/recommend?package_id=${pid}&date=${d}`),
+      j(`/api/package/${pid}`),
+      buildCurve(pid, d.slice(0,4))
+    ]);
+    render(rec, meta, curve, d);
+  }catch(e){
+    $('out').innerHTML = `<p class="err">Could not load: ${e}</p>`;
+  }
+  $('go').disabled = false;
+}
+
+function render(rec, meta, curve, d){
+  $('m-region').textContent = meta.region || '—';
+  $('m-type').textContent   = meta.group_type || '—';
+  $('m-dur').textContent    = meta.duration || '—';
+  $('m-swap').innerHTML = meta.swappable
+      ? '<span class="pill yes">yes</span>'
+      : '<span class="pill no">no</span>';
+
+  const f = rec.forecast || rec;
+  $('m-conf').textContent = f.confidence || '—';
+
+  if(rec.recommendation_type === 'unavailable'){
+    $('out').innerHTML = `<h2 class="pkg">${meta.title}</h2>
+      <p class="route">${meta.route||''}</p>
+      <p class="err">${rec.message}</p>`;
+    return;
+  }
+
+  const selMonth = parseInt(d.slice(5,7),10);
+  const max = Math.max(...curve.curve.map(c=>c.index||0), 1);
+
+  const strip = curve.curve.map(c=>{
+    const h = c.index ? Math.max(3, Math.round(c.index/max*104)) : 3;
+    const cls = BANDCLS[c.band] || 'm';
+    return `<div class="mon ${c.in_season===false?'off':''} ${c.month===selMonth?'sel':''}">
+       <div class="val">${c.index!=null?Math.round(c.index):''}</div>
+       <div class="bar ${cls}" style="height:${h}px"></div>
+       <div class="lab">${c.label}</div>
+     </div>`;
+  }).join('');
+
+  const reasons = (f.reasons||[]).map(r=>`<span>${r}</span>`).join('');
+
+  const peak = f.peak_stop;
+  const peakLine = peak
+    ? `Busiest point: ${peak.nameable?peak.name:'one stop on this route'} at ${peak.display_index ?? peak.index} on ${peak.date}`
+    : '';
+
+  let alts = '';
+  if((rec.alternatives||[]).length){
+    alts = rec.alternatives.map(a=>{
+      const t = a.title || a.date;
+      const sub = a.title ? (a.duration||'') : 'same package, different date';
+      return `<div class="alt">
+        <div class="a-main">
+          <div class="a-title">${t}</div>
+          <div class="a-sub">${sub}</div>
+        </div>
+        <div class="a-num">
+          <div class="a-idx">${a.display_index}</div>
+          <div class="a-band">${a.band}</div>
+          <div class="a-delta">−${a.quieter_by}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('out').innerHTML = `
+    <h2 class="pkg">${meta.title}</h2>
+    <p class="route">${meta.route||''}</p>
+
+    <div class="strip-wrap">
+      <div class="strip-head">
+        <span>Monthly baseline through ${curve.year}</span>
+        <span>before weekend and holiday effects</span>
+      </div>
+      <div class="strip">${strip}</div>
+      <div class="legend">
+        <span><i style="background:var(--quiet)"></i>Quiet</span>
+        <span><i style="background:var(--moderate)"></i>Moderate</span>
+        <span><i style="background:var(--busy)"></i>Busy</span>
+        <span><i style="background:var(--verybusy)"></i>Very busy</span>
+        <span><i style="background:var(--muted);background-image:repeating-linear-gradient(45deg,#fff 0 3px,transparent 3px 6px);opacity:.55"></i>Outside recommended season</span>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="score">${f.display_index}<small>${f.band}</small></div>
+      <div class="vtext">
+        <p>${peakLine}</p>
+        <div class="why">${reasons}</div>
+        ${rec.warning?`<p class="warn">${rec.warning}</p>`:''}
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <div class="action-kind">${(rec.recommendation_type||'').replace(/_/g,' ')}</div>
+    <p class="action-msg">${rec.message||''}</p>
+    ${alts}
+  `;
+}
+
+$('go').addEventListener('click', run);
+$('pkg').addEventListener('change', run);
+$('date').addEventListener('change', run);
+window.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
