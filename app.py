@@ -134,11 +134,11 @@ def alt_pkgs():
                     'alternatives': alts or [], 'note': why})
 
 
-@app.route('/api/package/<package_id>')
+@app.route('/api/package/<path:package_id>')
 def package(package_id):
     t = ENGINE._tour(package_id)
     if not t:
-        return jsonify({'error': 'not found'}), 404
+        return jsonify({'error': f'package {package_id} not found'}), 404
     sw = ENGINE.swappable()
     return jsonify({
         'package_id': t['package_id'], 'title': t['title'],

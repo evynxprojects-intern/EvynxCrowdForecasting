@@ -89,8 +89,14 @@ class Engine:
         self.city_curve   = s['city']
         self.state_curve  = s['state']
         self.region_curve = s['region']
-        self.tours = {str(t['package_id']): t for t in _load('tours.json')}
-        self.by_id = {str(t['id']): t for t in _load('tours.json')}
+        _t = _load('tours.json')
+        self.tours = {str(t['package_id']): t for t in _t}
+        # every alternative key that should resolve to a tour
+        self.by_id = {}
+        for t in _t:
+            for kk in (t.get('id'), t.get('package_id'), t.get('slug')):
+                if kk:
+                    self.by_id[str(kk)] = t
         self.festivals = _load('festivals.json')
         self.holidays = _load('holidays.json')
         for t in self.tours.values():

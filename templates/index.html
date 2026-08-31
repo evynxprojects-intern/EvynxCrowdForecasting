@@ -205,7 +205,12 @@ hr.rule{border:0; border-top:1px solid var(--line); margin:30px 0 24px}
 const $ = id => document.getElementById(id);
 const BANDCLS = {'Quiet':'q','Moderate':'m','Busy':'b','Very Busy':'v'};
 
-async function j(u){ const r = await fetch(u); return r.json(); }
+async function j(u){
+  const r = await fetch(u);
+  const txt = await r.text();
+  try { return JSON.parse(txt); }
+  catch(e){ throw new Error(`${u} returned ${r.status}: ${txt.slice(0,80)}`); }
+}
 
 const BAND = v => v>=75?'Very Busy':v>=55?'Busy':v>=30?'Moderate':'Quiet';
 
